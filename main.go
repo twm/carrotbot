@@ -10,6 +10,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"strings"
 )
 
 var factFile = config.String("factfile", "facts.json")
@@ -89,9 +90,12 @@ func main() {
 		})
 
 	ic.AddHandler("PRIVMSG", func(conn *irc.Conn, line *irc.Line) {
+		channel := line.Args[0]
 		if line.Args[1] == ".carrot" {
 			fact := choose(facts)
-			conn.Notice(line.Args[0], (*fact).Text)
+			conn.Notice(channel, (*fact).Text)
+		} else if strings.HasPrefix(line.Args[1], ".carroop") {
+			conn.Notice(channel, "CARROT CARROT CARROT CARROT")
 		}
 	})
 
