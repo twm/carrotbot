@@ -2,30 +2,42 @@
 carrotbot
 =========
 
-An IRC bot which responds to the ".carrot" command with a random carrot fact,
-courtesy of `@RealCarrotFacts <https://twitter.com/RealCarrotFacts>`_.
+An IRC bot which espouses root-vegetable related "facts".  This version
+supports the ".carrot" and ".turnip" commands.
 
-Quotes are loaded from a JSON file as output by `twistorpy
-<https://github.com/fisadev/twistorpy>`_, by default in ``facts.json``.  To
-generate it::
+Quote Databases
+---------------
 
-    $ python2.7 twistorpy.py RealCarrotFacts facts.json
+Two formats are supported for quote databases: a newline-delimited UTF-8 text
+file, or JSON.  The filetype of the database is indicated by the filename
+extension, either ".txt" or ".json".
+
+The JSON format is compatible with the output of `twistorpy
+<https://github.com/fisadev/twistorpy>`_.  It is an array of object literals
+with at least "id" (integer) and "text" (string) properties.  For example, to
+generate one for `@RealCarrotFacts <https://twitter.com/RealCarrotFacts>`::
+
+    $ python2.7 twistorpy.py RealCarrotFacts carrots.json
 
 Updates can be done thereafter with the same command.
+
+Configuration
+-------------
 
 Configuration is done via ``config.toml``, a file in the TOML (INI-like)
 format.  An example::
 
     [irc]
-    server = irc.freenode.net:7000
+    server = "irc.freenode.net:7000"
     ssl = true
-    user = fontofwisdom
-    password = supersekrit
-    nick = fontofwisdom
-    name = Font of Wisdom
-    channel = #your-channel
+    user = "fontofwisdom"
+    password = "supersekrit"
+    nick = "fontofwisdom"
+    name = "Font of Wisdom"
+    channel = "#your-channel"
 
     [facts]
-    db = facts.json
+    carrots = "carrots.json"
+    turnips = "turnips.txt"
 
 carrotbot has only been tested against Freenode's servers.

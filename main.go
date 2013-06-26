@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	cryptorand "crypto/rand"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	irc "github.com/fluffle/goirc/client"
 	"github.com/stvp/go-toml-config"
 	"io"
@@ -12,8 +14,6 @@ import (
 	"os"
 	"strings"
 )
-
-var factFile = config.String("factfile", "facts.json")
 
 // IRC configuration parameters
 var (
@@ -26,28 +26,56 @@ var (
 	ircChannel = config.String("irc.channel", "#carrotfacts-test")
 )
 
-// Fact database
+// Fact databases
 var (
-	factDB = config.String("facts.db", "facts.json")
+	carrotDB = config.String("facts.carrots", "carrots.json")
+	turnipDB = config.String("facts.turnips", "turnips.txt")
 )
 
-type CarrotFact struct {
+type Fact struct {
 	Text string `json:"text"`
 	Id   int64  `json:"id"`
 }
 
-func loadFacts(fn string) (facts []CarrotFact, err error) {
+// Load facts from a database in JSON or TXT format.
+//
+// The JSON format is a list of objects with a "text" key, containing the fact
+// text, and an "id" key, an integer identifier.
+//
+// The TXT format is one fact per line.  Line numbers are used as identifiers.
+func loadFacts(fn string) (facts []Fact, err error) {
 	var f io.Reader
 	f, err = os.Open(fn)
 	if err != nil {
 		return
 	}
-	dec := json.NewDecoder(f)
-	err = dec.Decode(&facts)
+	if strings.HasSuffix(fn, ".json") {
+		dec := json.NewDecoder(f)
+		err = dec.Decode(&facts)
+	} else if strings.HasSuffix(fn, ".txt") {
+		facts, err = loadLines(f)
+	} else {
+		err = fmt.Errorf("filename %q has unknown extension (not .json or .txt)", fn)
+	}
 	return
 }
 
-// The Go PNRG must be seeded or we'll always give facts in the same order.
+// Read in a newline-delimited fact file.
+func loadLines(f io.Reader) ([]Fact, error) {
+	scanner := bufio.NewScanner(f)
+	facts := make([]Fact, 0)
+	var line int64 = 0
+	for scanner.Scan() {
+		facts = append(facts, Fact{
+			Id:   line,
+			Text: scanner.Text(),
+		})
+		line++
+	}
+	return facts, scanner.Err()
+}
+
+// The Go PRNG must be seeded or we'll always give facts in the same order.
 func seed() (err error) {
 	var seed int64
 	err = binary.Read(cryptorand.Reader, binary.LittleEndian, &seed)
@@ -58,7 +86,7 @@ func seed() (err error) {
 }
 
 // Pick a random fact from the collection.
-func choose(facts []CarrotFact) (fact *CarrotFact) {
+func choose(facts []Fact) (fact *Fact) {
 	if facts == nil {
 		return nil
 	}
@@ -72,14 +100,26 @@ func main() {
 		log.Fatalf("Unable to seed the PRNG: %s\n", err)
 	}
 
-	facts, err := loadFacts(*factDB)
+	carrotFacts, err := loadFacts(*carrotDB)
 	if err != nil {
-		log.Fatalf("Unable to read facts from '%s': %s\n", *factDB, err)
+		log.Fatalf("Unable to read facts from '%s': %s\n", *carrotDB, err)
 	}
-	if facts == nil || len(facts) < 1 {
+	if carrotFacts == nil || len(carrotFacts) < 1 {
 		log.Fatalf("No facts available\n")
 	}
-	log.Printf("Loaded %d facts\n", len(facts))
+	log.Printf("Loaded %d carrot facts\n", len(carrotFacts))
+
+	turnipFacts, err := loadFacts(*turnipDB)
+	if err != nil {
+		log.Fatalf("Unable to read facts from '%s': %s\n", *turnipDB, err)
+	}
+	if turnipFacts == nil || len(turnipFacts) < 1 {
+		log.Fatalf("No facts available\n")
+	}
+	log.Printf("Loaded %d turnip facts\n", len(turnipFacts))
+
+	// Index into turnipFacts, the next fact to output.
+	turnipIndex := 0
 
 	ic := irc.SimpleClient(*ircNick, *ircNick, *ircName)
 	ic.SSL = *ircSSL
@@ -92,8 +132,13 @@ func main() {
 	ic.AddHandler("PRIVMSG", func(conn *irc.Conn, line *irc.Line) {
 		channel := line.Args[0]
 		if line.Args[1] == ".carrot" {
-			fact := choose(facts)
-			conn.Notice(channel, (*fact).Text)
+			carrot := choose(carrotFacts)
+			conn.Notice(channel, (*carrot).Text)
+		} else if line.Args[1] == ".turnip" {
+			turnip := turnipFacts[turnipIndex]
+			turnipIndex++
+			if turnipIndex == len(turnipFacts) { turnipIndex = 0 }
+			conn.Notice(channel, turnip.Text)
 		} else if strings.HasPrefix(line.Args[1], ".carroop") {
 			conn.Notice(channel, "CARROT CARROT CARROT CARROT")
 		}
