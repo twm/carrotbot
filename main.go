@@ -54,12 +54,14 @@ type Fact struct {
 	Id   int64  `json:"id"`
 }
 
-// Load facts from a database in JSON or TXT format.
+// loadFacts obtains facts from the named database file in JSON or TXT format.
 //
 // The JSON format is a list of objects with a "text" key, containing the fact
-// text, and an "id" key, an integer identifier.
+// text, and an "id" key, an integer identifier.  The file name must end with
+// ".json".
 //
 // The TXT format is one fact per line.  Line numbers are used as identifiers.
+// The file name must end with ".txt".
 func loadFacts(fn string) (facts []Fact, err error) {
 	var f io.Reader
 	f, err = os.Open(fn)
@@ -92,7 +94,8 @@ func loadLines(f io.Reader) ([]Fact, error) {
 	return facts, scanner.Err()
 }
 
-// The Go PRNG must be seeded or we'll always give facts in the same order.
+// seed feeds the Go PRNG a cryptographically random number so we don't always
+// choose facts in the same order.
 func seed() (err error) {
 	var seed int64
 	err = binary.Read(cryptorand.Reader, binary.LittleEndian, &seed)
@@ -102,7 +105,7 @@ func seed() (err error) {
 	return
 }
 
-// Pick a random fact from the collection.
+// choose picks a random fact from the collection.
 func choose(facts []Fact) (fact *Fact) {
 	if facts == nil {
 		return nil
