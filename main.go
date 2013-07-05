@@ -12,6 +12,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"os/signal"
 	"strings"
 )
 
@@ -137,7 +138,9 @@ func main() {
 		} else if line.Args[1] == ".turnip" {
 			turnip := turnipFacts[turnipIndex]
 			turnipIndex++
-			if turnipIndex == len(turnipFacts) { turnipIndex = 0 }
+			if turnipIndex == len(turnipFacts) {
+				turnipIndex = 0
+			}
 			conn.Privmsg(channel, turnip.Text)
 		} else if strings.HasPrefix(line.Args[1], ".carroop") {
 			conn.Privmsg(channel, "CARROT CARROT CARROT CARROT")
@@ -153,5 +156,17 @@ func main() {
 		return
 	}
 
-	<-quit
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+
+main:
+	for {
+		select {
+		case <-interrupt:
+			ic.Quit("Carrot be with you!")
+		case <-quit:
+			log.Printf("Disconnected")
+			break main
+		}
+	}
 }
