@@ -5,6 +5,7 @@ import (
 	cryptorand "crypto/rand"
 	"encoding/binary"
 	"encoding/json"
+	"flag"
 	"fmt"
 	irc "github.com/fluffle/goirc/client"
 	"github.com/stvp/go-toml-config"
@@ -96,7 +97,10 @@ func choose(facts []Fact) (fact *Fact) {
 }
 
 func main() {
-	config.Parse("config.toml")
+	configFile := flag.String("config", "config.toml", "Config file")
+	flag.Parse()
+
+	config.Parse(*configFile)
 	if err := seed(); err != nil {
 		log.Fatalf("Unable to seed the PRNG: %s\n", err)
 	}

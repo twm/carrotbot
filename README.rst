@@ -24,8 +24,8 @@ Updates can be done thereafter with the same command.
 Configuration
 -------------
 
-Configuration is done via ``config.toml``, a file in the TOML (INI-like)
-format.  An example::
+Configuration is done via a file in the TOML format, by default
+``config.toml``, but configurable via the ``-config`` flag.  An example::
 
     [irc]
     server = "irc.freenode.net:7000"
