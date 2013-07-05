@@ -133,14 +133,14 @@ func main() {
 		channel := line.Args[0]
 		if line.Args[1] == ".carrot" {
 			carrot := choose(carrotFacts)
-			conn.Notice(channel, (*carrot).Text)
+			conn.Privmsg(channel, (*carrot).Text)
 		} else if line.Args[1] == ".turnip" {
 			turnip := turnipFacts[turnipIndex]
 			turnipIndex++
 			if turnipIndex == len(turnipFacts) { turnipIndex = 0 }
-			conn.Notice(channel, turnip.Text)
+			conn.Privmsg(channel, turnip.Text)
 		} else if strings.HasPrefix(line.Args[1], ".carroop") {
-			conn.Notice(channel, "CARROT CARROT CARROT CARROT")
+			conn.Privmsg(channel, "CARROT CARROT CARROT CARROT")
 		}
 	})
 
