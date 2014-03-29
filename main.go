@@ -1,4 +1,4 @@
-// Copyright 2013 Tom Most
+// Copyright 2013, 2014 Tom Most
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -164,8 +164,13 @@ func main() {
 				turnipIndex = 0
 			}
 			conn.Privmsg(channel, turnip.Text)
-		} else if strings.HasPrefix(line.Args[1], ".carroop") {
-			conn.Privmsg(channel, "CARROT CARROT CARROT CARROT")
+		} else if strings.HasPrefix(line.Args[1], ".carro") {
+			count := strings.Count(line.Args[1], "o")
+			if count > 61 {
+				count = 61 // max which fit
+			}
+			msg := strings.Repeat("CARROT ", count)
+			conn.Privmsg(channel, msg[0:len(msg)-1])
 		}
 	})
 
