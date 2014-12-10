@@ -171,6 +171,8 @@ func main() {
 			}
 			msg := strings.Repeat("CARROT ", count)
 			conn.Privmsg(channel, msg[0:len(msg)-1])
+		} else if strings.Contains(line.Args[1], "Merry") && strings.Contains(line.Args[1], "Christmas") {
+			conn.Privmsg(channel, "And a \x037carrot\x03 New Year!")
 		}
 	})
 
