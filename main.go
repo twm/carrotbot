@@ -133,6 +133,18 @@ func ircConfig() (*irc.Config, error) {
 	return cfg, nil
 }
 
+// yearEndGreeting returns an IRC-formatted string which wishes root-vegetable
+// related good fortune.
+func yearEndGreeting() string {
+	if rand.Float64() < 0.8 {
+		// "carrot" is orange (7).
+		return "And a \x037carrot\x03 New Year!"
+	} else {
+		// "turnip" is purple (6).
+		return "And a \x036turnip\x03 New Year!"
+	}
+}
+
 func main() {
 	configFile := flag.String("config", "config.toml", "Config file")
 	flag.Parse()
@@ -195,7 +207,7 @@ func main() {
 			msg := strings.Repeat("CARROT ", count)
 			conn.Privmsg(channel, msg[0:len(msg)-1])
 		} else if strings.Contains(line.Args[1], "Merry") && strings.Contains(line.Args[1], "Christmas") {
-			conn.Privmsg(channel, "And a \x037carrot\x03 New Year!")
+			conn.Privmsg(channel, yearEndGreeting())
 		}
 	})
 
