@@ -5,6 +5,16 @@ carrotbot
 An IRC bot which espouses root-vegetable related "facts".  This version
 supports the ".carrot" and ".turnip" commands.
 
+Building
+--------
+
+Carrotbot is written in Go using the `GoIRC library <https://github.com/fluffle/goirc>`.
+Dependencies are managed with `Glide <https://glide.sh>` and the ``vendor`` directory is checked in.
+To build you will need a functioning Go install (I use 1.7, but older versions will likely work) and ``GOPATH`` set.
+Then::
+
+    go build .
+
 Quote Databases
 ---------------
 
