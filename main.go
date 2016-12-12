@@ -18,6 +18,7 @@ package main
 import (
 	"bufio"
 	cryptorand "crypto/rand"
+	"crypto/tls"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
@@ -27,6 +28,7 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"net"
 	"os"
 	"os/signal"
 	"strings"
@@ -114,6 +116,23 @@ func choose(facts []Fact) (fact *Fact) {
 	return &facts[i]
 }
 
+// ircConfig creates an IRC configuration based on global configuration flags.
+func ircConfig() (*irc.Config, error) {
+	var host string
+	var err error
+	host, _, err = net.SplitHostPort(*ircServer)
+	if err != nil {
+		return nil, err
+	}
+	cfg := irc.NewConfig(*ircNick, *ircNick, *ircName)
+	cfg.Server = *ircServer
+	if *ircSSL {
+		cfg.SSL = true
+		cfg.SSLConfig = &tls.Config{ServerName: host}
+	}
+	return cfg, nil
+}
+
 func main() {
 	configFile := flag.String("config", "config.toml", "Config file")
 	flag.Parse()
@@ -144,15 +163,19 @@ func main() {
 	// Index into turnipFacts, the next fact to output.
 	turnipIndex := 0
 
-	ic := irc.SimpleClient(*ircNick, *ircNick, *ircName)
-	ic.SSL = *ircSSL
+	cfg, err := ircConfig()
+	if err != nil {
+		log.Fatalf("Failed to configure IRC: %s\n", err)
+	}
 
-	ic.AddHandler(irc.CONNECTED,
+	ic := irc.Client(cfg)
+
+	ic.HandleFunc(irc.CONNECTED,
 		func(conn *irc.Conn, line *irc.Line) {
 			conn.Join(*ircChannel)
 		})
 
-	ic.AddHandler("PRIVMSG", func(conn *irc.Conn, line *irc.Line) {
+	ic.HandleFunc("PRIVMSG", func(conn *irc.Conn, line *irc.Line) {
 		channel := line.Args[0]
 		if line.Args[1] == ".carrot" {
 			carrot := choose(carrotFacts)
@@ -177,10 +200,10 @@ func main() {
 	})
 
 	quit := make(chan bool)
-	ic.AddHandler(irc.DISCONNECTED,
+	ic.HandleFunc(irc.DISCONNECTED,
 		func(conn *irc.Conn, line *irc.Line) { quit <- true })
 
-	if err := ic.Connect(*ircServer); err != nil {
+	if err := ic.Connect(); err != nil {
 		log.Fatalf("Unable to connect: %s\n", err)
 		return
 	}
