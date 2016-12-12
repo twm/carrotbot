@@ -1,0 +1,6 @@
+package: .
+import:
+- package: github.com/fluffle/goirc
+  subpackages:
+  - client
+- package: github.com/stvp/go-toml-config

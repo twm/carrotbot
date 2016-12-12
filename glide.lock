@@ -1,0 +1,24 @@
+hash: c5a1d26266d754672ee360482038465dd087b6512e71dd28b3afb8ff3022d2cc
+updated: 2016-12-11T16:57:01.832863681-08:00
+imports:
+- name: github.com/fluffle/goirc
+  version: 64ad58533df555ea5e1f89db2a401e021df8dea0
+  subpackages:
+  - client
+  - logging
+  - state
+- name: github.com/golang/mock
+  version: bd3c8e81be01eef76d4b503f5e687d2d1354d2d9
+  subpackages:
+  - gomock
+- name: github.com/pelletier/go-buffruneio
+  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
+- name: github.com/pelletier/go-toml
+  version: ce7be745f09fe4ff89af8e3ea744e1deabf20ee3
+- name: github.com/stvp/go-toml-config
+  version: 52b9a2286ff3ab44ed986e69c350fa7156e1baeb
+- name: golang.org/x/net
+  version: b1a2d6e8c8b5fc8f601ead62536f02a8e1b6217d
+  subpackages:
+  - proxy
+testImports: []
