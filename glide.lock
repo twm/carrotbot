@@ -1,6 +1,14 @@
-hash: c5a1d26266d754672ee360482038465dd087b6512e71dd28b3afb8ff3022d2cc
-updated: 2016-12-11T16:57:01.832863681-08:00
+hash: 1f0dd761c9ec8d0741bfecde81f7b03137f106ea5df7391ea318d03280e2052d
+updated: 2016-12-12T13:06:06.406203144-08:00
 imports:
+- name: github.com/coreos/go-log
+  version: cd6a8de3fa081c0726d58f6c403738411cffd0b2
+  subpackages:
+  - log
+- name: github.com/coreos/go-systemd
+  version: 7c9533367ef925dc1078d75e5b7141e10da2c4e8
+  subpackages:
+  - journal
 - name: github.com/fluffle/goirc
   version: 64ad58533df555ea5e1f89db2a401e021df8dea0
   subpackages:
@@ -11,6 +19,8 @@ imports:
   version: bd3c8e81be01eef76d4b503f5e687d2d1354d2d9
   subpackages:
   - gomock
+- name: github.com/kardianos/osext
+  version: c2c54e542fb797ad986b31721e1baedf214ca413
 - name: github.com/pelletier/go-buffruneio
   version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
 - name: github.com/pelletier/go-toml

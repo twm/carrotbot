@@ -1,4 +1,4 @@
-// Copyright 2013, 2014 Tom Most
+// Copyright 2013, 2014, 2016 Tom Most
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,10 +23,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/coreos/go-log/log"
 	irc "github.com/fluffle/goirc/client"
 	"github.com/stvp/go-toml-config"
 	"io"
-	"log"
 	"math/rand"
 	"net"
 	"os"
@@ -151,39 +151,40 @@ func main() {
 
 	config.Parse(*configFile)
 	if err := seed(); err != nil {
-		log.Fatalf("Unable to seed the PRNG: %s\n", err)
+		log.Fatalf("Unable to seed the PRNG: %s", err)
 	}
 
 	carrotFacts, err := loadFacts(*carrotDB)
 	if err != nil {
-		log.Fatalf("Unable to read facts from '%s': %s\n", *carrotDB, err)
+		log.Fatalf("Unable to read facts from '%s': %s", *carrotDB, err)
 	}
 	if carrotFacts == nil || len(carrotFacts) < 1 {
-		log.Fatalf("No facts available\n")
+		log.Fatalf("No facts available")
 	}
-	log.Printf("Loaded %d carrot facts\n", len(carrotFacts))
+	log.Printf("Loaded %d carrot facts", len(carrotFacts))
 
 	turnipFacts, err := loadFacts(*turnipDB)
 	if err != nil {
-		log.Fatalf("Unable to read facts from '%s': %s\n", *turnipDB, err)
+		log.Fatalf("Unable to read facts from '%s': %s", *turnipDB, err)
 	}
 	if turnipFacts == nil || len(turnipFacts) < 1 {
-		log.Fatalf("No facts available\n")
+		log.Fatalf("No facts available")
 	}
-	log.Printf("Loaded %d turnip facts\n", len(turnipFacts))
+	log.Printf("Loaded %d turnip facts", len(turnipFacts))
 
 	// Index into turnipFacts, the next fact to output.
 	turnipIndex := 0
 
 	cfg, err := ircConfig()
 	if err != nil {
-		log.Fatalf("Failed to configure IRC: %s\n", err)
+		log.Fatalf("Failed to configure IRC: %s", err)
 	}
 
 	ic := irc.Client(cfg)
 
 	ic.HandleFunc(irc.CONNECTED,
 		func(conn *irc.Conn, line *irc.Line) {
+			log.Printf("Joining %s", *ircChannel)
 			conn.Join(*ircChannel)
 		})
 
@@ -215,8 +216,9 @@ func main() {
 	ic.HandleFunc(irc.DISCONNECTED,
 		func(conn *irc.Conn, line *irc.Line) { quit <- true })
 
+	log.Printf("Connecting to %s", ic.Config().Server)
 	if err := ic.Connect(); err != nil {
-		log.Fatalf("Unable to connect: %s\n", err)
+		log.Fatalf("Unable to connect: %s", err)
 		return
 	}
 
@@ -227,6 +229,7 @@ main:
 	for {
 		select {
 		case <-interrupt:
+			log.Printf("Interrupted: shutting down")
 			ic.Quit("Carrot be with you!")
 		case <-quit:
 			log.Printf("Disconnected")

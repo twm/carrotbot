@@ -1,6 +1,7 @@
-package: .
+package: github.com/twm/carrotbot
 import:
 - package: github.com/fluffle/goirc
   subpackages:
   - client
 - package: github.com/stvp/go-toml-config
+- package: github.com/coreos/go-log
