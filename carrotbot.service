@@ -1,0 +1,19 @@
+[Unit]
+Description=Carrotbot IRC Wisdom Injector
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/carrotbot -config /etc/carrotbot.toml
+WorkingDirectory=/var/lib/carrotbot
+Type=simple
+User=nobody
+Group=nogroup
+CapabilityBoundingSet=
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateDevices=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
