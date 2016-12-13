@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"github.com/coreos/go-log/log"
 	irc "github.com/fluffle/goirc/client"
+	irclog "github.com/fluffle/goirc/logging"
 	"github.com/stvp/go-toml-config"
 	"io"
 	"math/rand"
@@ -49,6 +50,12 @@ var (
 var (
 	carrotDB = config.String("facts.carrots", "carrots.json")
 	turnipDB = config.String("facts.turnips", "turnips.txt")
+)
+
+// Logging configuration
+var (
+	logJournal = config.Bool("logging.journal", true)
+	logDebug   = config.Bool("logging.debug", false)
 )
 
 type Fact struct {
@@ -145,46 +152,82 @@ func yearEndGreeting() string {
 	}
 }
 
+// StandardLogger adapts GoIRC's logging to the Logger interface provided by
+// the go-log library.
+type StandardLogger struct {
+	logger *log.Logger
+}
+
+func (sl StandardLogger) Debug(f string, a ...interface{}) {
+	sl.logger.Debugf(f, a...)
+}
+func (sl StandardLogger) Info(f string, a ...interface{}) {
+	sl.logger.Infof(f, a...)
+}
+func (sl StandardLogger) Warn(f string, a ...interface{}) {
+	sl.logger.Warningf(f, a...)
+}
+func (sl StandardLogger) Error(f string, a ...interface{}) {
+	sl.logger.Errorf(f, a...)
+}
+
+// buildLogger constructs a Logger based on global configuration flags.
+func buildLogger() *log.Logger {
+	var sink log.Sink
+	if *logJournal {
+		sink = log.JournalSink()
+	} else {
+		sink = log.WriterSink(os.Stderr, log.BasicFormat, log.BasicFields)
+	}
+	if !*logDebug {
+		sink = log.PriorityFilter(log.PriInfo, sink)
+	}
+	return log.NewSimple(sink)
+}
+
 func main() {
 	configFile := flag.String("config", "config.toml", "Config file")
 	flag.Parse()
 
 	config.Parse(*configFile)
+	logger := buildLogger()
+	irclog.SetLogger(StandardLogger{logger: logger})
+
 	if err := seed(); err != nil {
-		log.Fatalf("Unable to seed the PRNG: %s", err)
+		logger.Fatalf("Unable to seed the PRNG: %s", err)
 	}
 
 	carrotFacts, err := loadFacts(*carrotDB)
 	if err != nil {
-		log.Fatalf("Unable to read facts from '%s': %s", *carrotDB, err)
+		logger.Fatalf("Unable to read facts from '%s': %s", *carrotDB, err)
 	}
 	if carrotFacts == nil || len(carrotFacts) < 1 {
-		log.Fatalf("No facts available")
+		logger.Fatalf("No facts available")
 	}
-	log.Printf("Loaded %d carrot facts", len(carrotFacts))
+	logger.Infof("Loaded %d carrot facts", len(carrotFacts))
 
 	turnipFacts, err := loadFacts(*turnipDB)
 	if err != nil {
-		log.Fatalf("Unable to read facts from '%s': %s", *turnipDB, err)
+		logger.Fatalf("Unable to read facts from '%s': %s", *turnipDB, err)
 	}
 	if turnipFacts == nil || len(turnipFacts) < 1 {
-		log.Fatalf("No facts available")
+		logger.Fatalf("No facts available")
 	}
-	log.Printf("Loaded %d turnip facts", len(turnipFacts))
+	logger.Infof("Loaded %d turnip facts", len(turnipFacts))
 
 	// Index into turnipFacts, the next fact to output.
 	turnipIndex := 0
 
 	cfg, err := ircConfig()
 	if err != nil {
-		log.Fatalf("Failed to configure IRC: %s", err)
+		logger.Fatalf("Failed to configure IRC: %s", err)
 	}
 
 	ic := irc.Client(cfg)
 
 	ic.HandleFunc(irc.CONNECTED,
 		func(conn *irc.Conn, line *irc.Line) {
-			log.Printf("Joining %s", *ircChannel)
+			logger.Infof("Joining %s", *ircChannel)
 			conn.Join(*ircChannel)
 		})
 
@@ -216,9 +259,9 @@ func main() {
 	ic.HandleFunc(irc.DISCONNECTED,
 		func(conn *irc.Conn, line *irc.Line) { quit <- true })
 
-	log.Printf("Connecting to %s", ic.Config().Server)
+	logger.Infof("Connecting to %s", ic.Config().Server)
 	if err := ic.Connect(); err != nil {
-		log.Fatalf("Unable to connect: %s", err)
+		logger.Fatalf("Unable to connect: %s", err)
 		return
 	}
 
@@ -229,10 +272,10 @@ main:
 	for {
 		select {
 		case <-interrupt:
-			log.Printf("Interrupted: shutting down")
+			logger.Infof("Interrupted: shutting down")
 			ic.Quit("Carrot be with you!")
 		case <-quit:
-			log.Printf("Disconnected")
+			logger.Infof("Disconnected")
 			break main
 		}
 	}

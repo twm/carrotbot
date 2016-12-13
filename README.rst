@@ -50,4 +50,10 @@ Configuration is done via a file in the TOML format, by default
     carrots = "carrots.json"
     turnips = "turnips.txt"
 
+    [logging]
+    # log to stderr rather than the systemd journal
+    journal = false
+    # debug logs include everything said in the channel
+    debug = true
+
 carrotbot has only been tested against Freenode's servers.
